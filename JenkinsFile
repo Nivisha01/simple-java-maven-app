@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main',  // Ensure this matches your branch
+                git branch: 'master',  // Ensure this matches your branch
                     url: 'https://github.com/Nivisha01/simple-java-maven-app.git',
                     credentialsId: 'GitHub_Cred'
             }
@@ -46,28 +46,6 @@ pipeline {
                         sh """
                             docker build -t ${DOCKER_IMAGE} -f docker/Dockerfile .
                             docker push ${DOCKER_IMAGE}
-                        """
-                    }
-                }
-            }
-        }
-
-       stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    withEnv(["KUBECONFIG=${KUBECONFIG}"]) {
-                        sh """
-                            # Set the Minikube context
-                            kubectl config use-context minikube
-                            
-                            # Check if deployment exists and delete if necessary
-                            kubectl delete deployment ${PROJECT_NAME} --ignore-not-found
-                            
-                            # Create new deployment with Docker Hub image
-                            kubectl create deployment ${PROJECT_NAME} --image=${DOCKER_IMAGE} --replicas=2
-                            
-                            # Expose deployment as NodePort
-                            kubectl expose deployment ${PROJECT_NAME} --type=NodePort --port=80 --target-port=8070
                         """
                     }
                 }
