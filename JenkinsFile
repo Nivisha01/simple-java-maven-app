@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = 'http://23.22.187.159:9000'
+        SONAR_HOST_URL = 'http://50.19.149.10:9000'
         SONAR_TOKEN = credentials('sonar-token')
         DOCKERHUB_CREDENTIALS = credentials('DockerHub_Cred')
         PROJECT_NAME = 'my-app'
@@ -52,14 +52,22 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+       stage('Deploy to Kubernetes') {
             steps {
                 script {
                     withEnv(["KUBECONFIG=${KUBECONFIG}"]) {
                         sh """
+                            # Set the Minikube context
                             kubectl config use-context minikube
+                            
+                            # Check if deployment exists and delete if necessary
+                            kubectl delete deployment ${PROJECT_NAME} --ignore-not-found
+                            
+                            # Create new deployment with Docker Hub image
                             kubectl create deployment ${PROJECT_NAME} --image=${DOCKER_IMAGE} --replicas=2
-                            kubectl expose deployment ${PROJECT_NAME} --type=NodePort --port=80 --target-port=8070  // Use NodePort for Minikube
+                            
+                            # Expose deployment as NodePort
+                            kubectl expose deployment ${PROJECT_NAME} --type=NodePort --port=80 --target-port=8070
                         """
                     }
                 }
