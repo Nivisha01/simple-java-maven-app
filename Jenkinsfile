@@ -21,8 +21,9 @@ pipeline {
 
         stage('Maven Build') {
             steps {
-                sh '/opt/maven/bin/mvn clean install -DskipTests'
-'
+                withMaven(maven: 'Maven') {  // Updated to match the name you set
+                    sh 'mvn clean install -DskipTests'
+                }
             }
         }
 
